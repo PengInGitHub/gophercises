@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -29,7 +30,8 @@ func main() {
 	}
 
 	//print JSON
-	h := cyoa.NewHandler(story)
+	tpl := template.Must(template.New("").Parse("This is a temporary template"))
+	h := cyoa.NewHandler(story, cyoa.WithTemplate(tpl))
 	fmt.Printf("Start the server on port: %d\n", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), h))
 }
