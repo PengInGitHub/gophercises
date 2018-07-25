@@ -20,14 +20,26 @@ const (
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
 	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	err = createDB(db, dbname)
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
+
+	//create DB
+	err = resetDB(db, dbname)
+	handleErr(err)
 	db.Close()
+
+	//disconnect DB, create tables
+	psqlInfo = fmt.Sprintf("%s dbname=%s", psqlInfo, dbname)
+	db, err = sql.Open("postgres", psqlInfo)
+	handleErr(err)
+	defer db.Close()
+	//ping the DB
+	handleErr(db.Ping()) //ping: test the connectivity
+}
+
+func handleErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func createDB(db *sql.DB, dbname string) error {
@@ -36,6 +48,14 @@ func createDB(db *sql.DB, dbname string) error {
 		return err
 	}
 	return nil
+}
+
+func resetDB(db *sql.DB, dbname string) error {
+	_, err := db.Exec("DROP DATABASE IF EXISTS " + dbname)
+	if err != nil {
+		return err
+	}
+	return createDB(db, dbname)
 }
 
 func normalize(phone string) string {
