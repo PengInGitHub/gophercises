@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,42 +9,50 @@ import (
 )
 
 func main() {
-	dir := "./sample"
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		panic(err)
-	}
-	counter := 0
+	dir := "sample"
 
-	var toRename []string
-	for _, file := range files {
-		if file.IsDir() {
-		} else {
-			_, err := match(file.Name(), 4)
-			if err == nil {
-				counter++
-				toRename = append(toRename, file.Name())
-			}
-		}
+	type file struct {
+		path string
+		name string
 	}
 
-	for _, origFileName := range toRename {
-		newFileName, err := match(origFileName, counter)
-		if err != nil {
-			panic(err)
+	var toRename []file
+
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
 		}
-		origPath := filepath.Join(dir, origFileName)
-		newPath := filepath.Join(dir, newFileName)
-		fmt.Printf("mv %s => %s\n", origPath, newPath)
-		err = os.Rename(origPath, newPath)
+		if _, err := match(info.Name()); err == nil {
+			toRename = append(toRename, file{
+				path: path,
+				name: info.Name(),
+			})
+		}
+		return nil
+	})
+
+	for _, f := range toRename {
+		fmt.Printf("%q\n", f)
+	}
+
+	for _, orig := range toRename {
+		var n file
+		var err error
+		n.name, err = match(orig.name)
 		if err != nil {
-			panic(err)
+			fmt.Println("Got an error in mathcing", orig.path, err.Error)
+		}
+		n.path = filepath.Join(dir, n.name)
+		fmt.Printf("mv %s => %s\n", orig.path, n.path)
+		err = os.Rename(orig.path, n.path)
+		if err != nil {
+			fmt.Println("Got an error in renaming", orig.path, err.Error)
 		}
 	}
 }
 
 //match returns the new file name
-func match(fileName string, total int) (string, error) {
+func match(fileName string) (string, error) {
 	pieces := strings.Split(fileName, ".")
 	ext := pieces[len(pieces)-1]                      //the last is extension
 	tmp := strings.Join(pieces[0:len(pieces)-1], ".") //join the names by seperator
@@ -55,5 +62,5 @@ func match(fileName string, total int) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%s didn't match our pattern", fileName)
 	}
-	return fmt.Sprintf("%s - %d of %d.%s", strings.Title(name), number, total, ext), nil
+	return fmt.Sprintf("%s - %d.%s", strings.Title(name), number, ext), nil
 }
