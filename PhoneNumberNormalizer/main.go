@@ -76,6 +76,6 @@ func normalize(phone string) string {
 }
 
 func normalizeREGEXP(phone string) string {
-	re := regexp.MustCompile("\\D") //find all non int
+	re := regexp.MustCompile("\\D") //only int left
 	return re.ReplaceAllString(phone, "")
 }
