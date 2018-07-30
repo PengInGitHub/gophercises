@@ -100,6 +100,9 @@ func (db *DB) Seed() error {
 }
 func insertPhoneNumber(db *sql.DB, phone string) (int, error) {
 	statement := `INSERT INTO phone_numbers(value) VALUES($1) RETURNING id`
+	// result, err := db.Exec(statement, phone)
+	// id, err := result.LastInsertId()
+
 	var id int
 	err := db.QueryRow(statement, phone).Scan(&id)
 	if err != nil {
@@ -108,7 +111,7 @@ func insertPhoneNumber(db *sql.DB, phone string) (int, error) {
 	return id, nil
 }
 
-//GetAllPhones retrives records from table
+//GetAllPhones iterates over entries in the db, get all records
 func (db *DB) GetAllPhones() ([]Phone, error) {
 	rows, err := db.db.Query("SELECT id, value FROM phone_numbers")
 	if err != nil {
