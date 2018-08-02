@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gophercises/link"
+	"github.com/user/gophercises/link"
 )
 
 var exampleHtml = `
