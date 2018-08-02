@@ -15,7 +15,6 @@ func main() {
 
 	fileName := flag.String("url", "https://www.calhoun.io/", "the url which the sitemap is built for")
 
-	//fileName := flag.String("url", "https://gophercises.com", "the url which the sitemap is built for")
 	maxDepth := flag.Int("depth", 3, "the maximum depth of links to traverse")
 	flag.Parse()
 	//links := getLinks(*fileName)
@@ -25,14 +24,15 @@ func main() {
 	}
 }
 
+//empty helps to keep an unique set of seen urls WITHOUT creating additional data structure
+//struct{} uses less memory
 type empty struct{}
 
 //get all urls used for sitemap in a Breadth First Search manner
 func bfs(urlStr string, maxDepth int) []string {
-	//all the urls ever visted
+	//return all the urls ever visted
+
 	//maps' keys (url) are cashed so that it is faster than slice to look up if there is a value there
-	//empty = struct{}, it helps to keep an unique set of seen urls WITHOUT creating additional data structure
-	//struct{} uses less memory
 	seen := make(map[string]empty)
 
 	//current queue, every key is the url needs to getLinks() with
@@ -43,13 +43,16 @@ func bfs(urlStr string, maxDepth int) []string {
 	}
 	for i := 0; i <= maxDepth; i++ {
 		q, nq = nq, make(map[string]empty)
+
 		if len(q) == 0 {
-			break
+			break //terminate the loop
 		}
-		//for every q pull out the url
+
+		//loop through map: k, v := range map{}, or k := range map{}
+		//pull out each url string from the current queue
 		for url := range q {
 
-			//skip loop if the url is seen
+			//skip this round of loop if the url is already seen
 			if _, ok := seen[url]; ok {
 				continue
 			}
@@ -73,18 +76,21 @@ func getLinks(urlStr string) []string {
 	//request the website, get response
 	resp, err := http.Get(urlStr)
 	if err != nil {
-		fmt.Errorf("Got an error in http.Get(): %s", err)
+		return []string{}
 	}
 	defer resp.Body.Close()
 
 	//build base url from the request url
-	reqUrl := resp.Request.URL
-	baseUrl := &url.URL{
-		Scheme: reqUrl.Scheme,
-		Host:   reqUrl.Host,
+	reqURL := resp.Request.URL
+	baseURL := &url.URL{
+		Scheme: reqURL.Scheme,
+		Host:   reqURL.Host,
 	}
-	base := baseUrl.String()
+	//get base URL
+	base := baseURL.String()
+	//compose full url: base+href
 	hrefs := getHrefs(resp.Body, base)
+	//leave urls have prefix of base only
 	return filter(hrefs, withPrefix(base))
 }
 
@@ -94,8 +100,10 @@ func getHrefs(r io.Reader, base string) []string {
 	var hrefs []string
 	for _, l := range links {
 		switch {
+		//get full url
 		case strings.HasPrefix(l.Href, "/"):
 			hrefs = append(hrefs, base+l.Href)
+		//get url directly
 		case strings.HasPrefix(l.Href, "http"):
 			hrefs = append(hrefs, l.Href)
 		}
