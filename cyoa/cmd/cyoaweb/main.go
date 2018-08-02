@@ -19,21 +19,21 @@ func main() {
 
 	flag.Parse()
 
-	//open JSON
+	//open JSON file
 	file, err := os.Open(*fileName)
 	if err != nil {
 		panic(err)
 	}
 
-	//decode JSON
+	//decode JSON to Story
 	story, err := cyoa.JSONStory(file)
 	if err != nil {
 		panic(err)
 	}
 
-	//create temporary template
-	tpl := template.Must(template.New("").Parse("This is a temporary template"))
-	tpl = template.Must(template.New("").Parse(getTmplstring()))
+	//create template
+	tpl := template.Must(template.New("").Parse("This is a temporary template")) //temporary
+	tpl = template.Must(template.New("").Parse(getTmplstring()))                 //template to use
 
 	//WithTemplate assigns template instance to handler struct
 	handlerOption := cyoa.WithTemplate(tpl)

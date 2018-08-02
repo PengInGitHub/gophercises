@@ -64,6 +64,7 @@ func NewHandler(s Story, opts ...HandlerOption) http.Handler {
 	return h
 }
 
+//custom ServeHTTP function
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimSpace(r.URL.Path)
 	if path == "" || path == "/" {
